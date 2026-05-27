@@ -24,3 +24,19 @@ windeployqt UCAVDesigner.exe
 ```
 
 完成后将输出目录整体复制到无 Qt 环境的 Windows 机器上测试。若后续接入 QCustomPlot，只需把 `qcustomplot.h/.cpp` 加入工程，并用 QCustomPlot 替换当前的 `ConstraintPlotWidget` 绘图实现。
+
+## CMake
+
+```bat
+cmake -S . -B build -DCMAKE_PREFIX_PATH=C:\Qt\6.8.0\msvc2022_64
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure
+```
+
+如只想验证核心算法而不安装 Qt，可改为：
+
+```bat
+cmake -S . -B build -DUCAV_BUILD_GUI=OFF
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure
+```

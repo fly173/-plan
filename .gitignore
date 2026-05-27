@@ -1,1 +1,17 @@
 tools/
+build/
+build-*/
+debug/
+release/
+.qmake.stash
+*.pro.user
+*.qtc_clangd
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exe
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+Testing/

@@ -20,3 +20,9 @@
 ## 当前说明
 
 当前仓库没有附带 QCustomPlot 源码，因此界限线图先用 `QPainter` 自绘控件实现，交互和数据接口已经隔离在 `ConstraintPlotWidget` 中。拿到 QCustomPlot 后可替换该控件内部绘图实现。
+
+## Build Options
+
+- `UCAVDesigner.pro`: open in Qt Creator or build with `qmake`
+- `CMakeLists.txt`: build with CMake and Qt 5/6
+- `-DUCAV_BUILD_GUI=OFF`: build the core library and `core_tests` without requiring Qt, which is useful for CI and quick validation
