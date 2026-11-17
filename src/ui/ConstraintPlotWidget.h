@@ -12,6 +12,7 @@ public:
 
     void setConstraintResult(const ucav::ConstraintResult& result);
     void setSelectedPoint(double wingLoading, double thrustToWeight);
+    void clearResult();
 
 signals:
     void designPointSelected(double wingLoading, double thrustToWeight);

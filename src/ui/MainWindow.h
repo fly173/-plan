@@ -8,6 +8,9 @@
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QTableWidget>
+#include <QTabWidget>
+
+class QCloseEvent;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -15,7 +18,18 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget* parent = nullptr);
 
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
 private:
+    void markModified();
+    bool confirmDiscard();
+    bool validateInput();
+    QTabWidget* m_tabs = nullptr;
+    QLabel* m_resultStatus = nullptr;
+    bool m_updating = false;
+    bool m_resultsCurrent = false;
+    QString m_projectPath;
     QWidget* buildDesignTab();
     QWidget* buildMissionTab();
     QWidget* buildParameterTab();

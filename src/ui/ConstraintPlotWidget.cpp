@@ -29,6 +29,14 @@ void ConstraintPlotWidget::setSelectedPoint(double wingLoading, double thrustToW
     update();
 }
 
+void ConstraintPlotWidget::clearResult()
+{
+    m_result = {};
+    m_hasResult = false;
+    m_hasSelectedPoint = false;
+    update();
+}
+
 QRectF ConstraintPlotWidget::plotArea() const
 {
     return QRectF(68, 28, width() - 104, height() - 86);

@@ -16,6 +16,17 @@
 #include <QTabWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
+#include <QAction>
+#include <QCloseEvent>
+#include <QFileInfo>
+#include <QJsonParseError>
+#include <QLocale>
+#include <QSaveFile>
+#include <QScopedValueRollback>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QToolBar>
+#include <cmath>
 
 namespace {
 
@@ -27,8 +38,10 @@ QLineEdit* numericEdit(double value)
 {
     auto* edit = new QLineEdit(QString::number(value, 'g', 10));
     auto* validator = new QDoubleValidator(edit);
-    validator->setNotation(QDoubleValidator::StandardNotation);
+    validator->setNotation(QDoubleValidator::ScientificNotation);
+    validator->setLocale(QLocale::c());
     edit->setValidator(validator);
+    edit->setClearButtonEnabled(true);
     return edit;
 }
 
@@ -64,17 +77,108 @@ void setCell(QTableWidget* table, int row, int column, const QString& value)
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    setWindowTitle("无人作战飞机初步设计工具");
+    setWindowTitle("未命名项目[*] - 无人作战飞机初步设计工具");
     resize(1180, 760);
 
     auto* tabs = new QTabWidget(this);
+    m_tabs = tabs;
     tabs->addTab(buildDesignTab(), "设计要求");
     tabs->addTab(buildMissionTab(), "任务剖面");
     tabs->addTab(buildParameterTab(), "气动 / 发动机");
     tabs->addTab(buildResultTab(), "计算结果");
     setCentralWidget(tabs);
 
+    auto* toolbar = addToolBar("项目操作");
+    toolbar->setMovable(false);
+    auto* openAction = toolbar->addAction("打开项目");
+    openAction->setShortcut(QKeySequence::Open);
+    connect(openAction, &QAction::triggered, this, &MainWindow::loadProject);
+    auto* saveAction = toolbar->addAction("保存项目");
+    saveAction->setShortcut(QKeySequence::Save);
+    connect(saveAction, &QAction::triggered, this, &MainWindow::saveProject);
+    toolbar->addSeparator();
+    auto* runAction = toolbar->addAction("开始计算");
+    runAction->setShortcut(QKeySequence(Qt::Key_F5));
+    connect(runAction, &QAction::triggered, this, &MainWindow::runCalculation);
+    connect(toolbar->addAction("查看结果"), &QAction::triggered, this, [this] {
+        m_tabs->setCurrentIndex(3);
+    });
+    statusBar()->addPermanentWidget(new QLabel("界面单位：SI 国际单位制", this));
+    m_updating = true;
     loadDefaults();
+    m_updating = false;
+    for (auto* edit : findChildren<QLineEdit*>()) {
+        connect(edit, &QLineEdit::textEdited, this, &MainWindow::markModified);
+    }
+    connect(m_missionTable, &QTableWidget::cellChanged, this, &MainWindow::markModified);
+    statusBar()->showMessage("就绪；Ctrl+O 打开，Ctrl+S 保存，F5 计算。");
+}
+
+void MainWindow::markModified()
+{
+    if (m_updating) return;
+    setWindowModified(true);
+    m_resultsCurrent = false;
+    m_resultStatus->setText("输入已修改，结果尚未更新。请重新计算。");
+    m_plot->setEnabled(false);
+    statusBar()->showMessage("输入已修改；项目尚未保存，结果尚未更新。");
+}
+
+bool MainWindow::confirmDiscard()
+{
+    if (!isWindowModified()) return true;
+    QMessageBox box(QMessageBox::Question, "尚未保存", "当前项目有未保存的修改。", QMessageBox::NoButton, this);
+    auto* save = box.addButton("保存", QMessageBox::AcceptRole);
+    auto* discard = box.addButton("不保存", QMessageBox::DestructiveRole);
+    auto* cancel = box.addButton("取消", QMessageBox::RejectRole);
+    box.setDefaultButton(save);
+    box.setEscapeButton(cancel);
+    box.exec();
+    if (box.clickedButton() == discard) return true;
+    if (box.clickedButton() != save) return false;
+    saveProject();
+    return !isWindowModified();
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (confirmDiscard()) event->accept();
+    else event->ignore();
+}
+
+bool MainWindow::validateInput()
+{
+    const auto showInvalid = [this](QWidget* widget, const QString& message) {
+        for (int i = 0; i < m_tabs->count(); ++i) {
+            if (m_tabs->widget(i)->isAncestorOf(widget)) m_tabs->setCurrentIndex(i);
+        }
+        QMessageBox::warning(this, "输入格式有误", message);
+        widget->setFocus();
+    };
+    for (auto* edit : findChildren<QLineEdit*>()) {
+        if (!edit->validator()) continue;
+        bool ok = false;
+        const double value = edit->text().toDouble(&ok);
+        if (!ok || !std::isfinite(value) || !edit->hasAcceptableInput()) {
+            showInvalid(edit, "请填写有效数字，使用小数点；支持科学计数法，例如 1.2e-4。");
+            edit->selectAll();
+            return false;
+        }
+    }
+    for (int row = 0; row < m_missionTable->rowCount(); ++row) {
+        for (int col = 2; col < m_missionTable->columnCount(); ++col) {
+            const auto* item = m_missionTable->item(row, col);
+            bool ok = false;
+            const double value = item ? item->text().toDouble(&ok) : 0.0;
+            if (!ok || !std::isfinite(value)) {
+                m_missionTable->setCurrentCell(row, col);
+                showInvalid(m_missionTable, QString("第 %1 行的“%2”需要填写有效数字。")
+                    .arg(row + 1).arg(m_missionTable->horizontalHeaderItem(col)->text()));
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 QWidget* MainWindow::buildDesignTab()
@@ -106,24 +210,10 @@ QWidget* MainWindow::buildDesignTab()
     auto* group = new QGroupBox("设计要求", page);
     group->setLayout(form);
 
-    auto* buttons = new QHBoxLayout();
-    auto* calculate = new QPushButton("开始计算", page);
-    auto* save = new QPushButton("保存项目", page);
-    auto* load = new QPushButton("加载项目", page);
-    buttons->addWidget(calculate);
-    buttons->addWidget(save);
-    buttons->addWidget(load);
-    buttons->addStretch();
-
-    connect(calculate, &QPushButton::clicked, this, &MainWindow::runCalculation);
-    connect(save, &QPushButton::clicked, this, &MainWindow::saveProject);
-    connect(load, &QPushButton::clicked, this, &MainWindow::loadProject);
-
     layout->addWidget(group);
     auto* unitHint = new QLabel("单位说明：长度用米（m），质量用千克（kg），时间用秒（s），力用牛顿（N）。马赫数和各类比值、系数为无量纲量。", page);
     unitHint->setWordWrap(true);
     layout->addWidget(unitHint);
-    layout->addLayout(buttons);
     layout->addStretch();
     return page;
 }
@@ -199,7 +289,13 @@ QWidget* MainWindow::buildResultTab()
     auto* page = new QWidget(this);
     auto* root = new QHBoxLayout(page);
 
-    auto* left = new QVBoxLayout();
+    auto* splitter = new QSplitter(Qt::Horizontal, page);
+    splitter->setChildrenCollapsible(false);
+    auto* resultPanel = new QWidget(splitter);
+    auto* left = new QVBoxLayout(resultPanel);
+    m_resultStatus = new QLabel("尚未运行计算。", resultPanel);
+    m_resultStatus->setWordWrap(true);
+    left->addWidget(m_resultStatus);
     m_summaryLabel = new QLabel("尚未运行计算。", page);
     m_summaryLabel->setWordWrap(true);
     m_marginLabel = new QLabel("点击约束图可选择设计点。", page);
@@ -230,8 +326,11 @@ QWidget* MainWindow::buildResultTab()
     m_plot = new ConstraintPlotWidget(page);
     connect(m_plot, &ConstraintPlotWidget::designPointSelected, this, &MainWindow::handleDesignPoint);
 
-    root->addLayout(left, 1);
-    root->addWidget(m_plot, 2);
+    splitter->addWidget(resultPanel);
+    splitter->addWidget(m_plot);
+    splitter->setStretchFactor(0, 1);
+    splitter->setStretchFactor(1, 2);
+    root->addWidget(splitter);
     return page;
 }
 
@@ -246,6 +345,7 @@ void MainWindow::loadDefaults()
 
 void MainWindow::runCalculation()
 {
+    if (!validateInput()) return;
     const ucav::DesignRequirements req = readRequirements();
     const ucav::AeroParameters aero = readAero();
     const ucav::EngineParameters engine = readEngine();
@@ -260,8 +360,13 @@ void MainWindow::runCalculation()
     m_plot->setConstraintResult(m_lastConstraintResult);
     m_plot->setSelectedPoint(m_lastConstraintResult.recommendedWingLoading,
                              m_lastConstraintResult.recommendedThrustToWeight);
+    m_resultsCurrent = true;
+    m_plot->setEnabled(true);
     handleDesignPoint(m_lastConstraintResult.recommendedWingLoading,
                       m_lastConstraintResult.recommendedThrustToWeight);
+    m_resultStatus->setText("结果对应当前输入。输入修改后需重新计算。");
+    statusBar()->showMessage("计算已结束；结果是否收敛请查看摘要。");
+    m_tabs->setCurrentIndex(3);
 }
 
 void MainWindow::addMissionRow(const ucav::MissionSegment& segment)
@@ -273,6 +378,7 @@ void MainWindow::addMissionRow(const ucav::MissionSegment& segment)
         combo->addItem(QString::fromStdString(ucav::missionSegmentTypeName(ucav::missionSegmentTypeFromIndex(i))));
     }
     combo->setCurrentIndex(ucav::missionSegmentTypeIndex(segment.type));
+    connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::markModified);
     m_missionTable->setCellWidget(row, 0, combo);
     setCell(m_missionTable, row, 1, QString::fromStdString(segment.name));
     setCell(m_missionTable, row, 2, segment.distanceKm * kMetersPerKilometer);
@@ -293,6 +399,7 @@ void MainWindow::removeMissionSegment()
     const int row = m_missionTable->currentRow();
     if (row >= 0) {
         m_missionTable->removeRow(row);
+        markModified();
     }
 }
 
@@ -435,13 +542,19 @@ void MainWindow::showMargins(const ucav::MarginResult& margins)
 
 void MainWindow::handleDesignPoint(double wingLoading, double thrustToWeight)
 {
+    if (!m_resultsCurrent) return;
     ucav::ConstraintAnalysis analysis;
     showMargins(analysis.margins(wingLoading, thrustToWeight, readRequirements(), readAero(), readEngine()));
 }
 
 void MainWindow::saveProject()
 {
-    const QString path = QFileDialog::getSaveFileName(this, "保存项目", QString(), "无人机项目 (*.json)");
+    if (!validateInput()) return;
+    QFileDialog dialog(this, "保存项目", m_projectPath, "项目文件 (*.json)");
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix("json");
+    if (dialog.exec() != QDialog::Accepted) return;
+    const QString path = dialog.selectedFiles().value(0);
     if (path.isEmpty()) {
         return;
     }
@@ -470,12 +583,20 @@ void MainWindow::saveProject()
     }
     root["mission"] = missionArray;
 
-    QFile file(path);
+    QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
         QMessageBox::warning(this, "保存失败", file.errorString());
         return;
     }
-    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    const QByteArray bytes = QJsonDocument(root).toJson(QJsonDocument::Indented);
+    if (file.write(bytes) != bytes.size() || !file.commit()) {
+        QMessageBox::warning(this, "保存失败", "项目未能完整保存：" + file.errorString());
+        return;
+    }
+    m_projectPath = path;
+    setWindowTitle(QFileInfo(path).fileName() + "[*] - 无人作战飞机初步设计工具");
+    setWindowModified(false);
+    statusBar()->showMessage("项目已保存：" + path);
 }
 
 void MainWindow::loadProject()
@@ -490,7 +611,41 @@ void MainWindow::loadProject()
         QMessageBox::warning(this, "加载失败", file.errorString());
         return;
     }
-    const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        QMessageBox::warning(this, "加载失败", "文件不是有效的 JSON 项目对象。当前输入未改变。");
+        return;
+    }
+    const QJsonObject root = document.object();
+    const auto hasNumbers = [](const QJsonObject& object, const QStringList& keys) {
+        for (const QString& key : keys) {
+            if (!object.value(key).isDouble() || !std::isfinite(object.value(key).toDouble())) return false;
+        }
+        return true;
+    };
+    bool valid = root["requirements"].isObject() && root["aero"].isObject()
+        && root["engine"].isObject() && root["mission"].isArray();
+    valid = valid && hasNumbers(root["requirements"].toObject(),
+        {"cruiseMach", "cruiseAltitudeM", "combatRadiusKm", "payloadKg", "crewAndFixedKg",
+         "takeoffDistanceM", "landingDistanceM", "turnLoadFactor", "climbRateMs"});
+    valid = valid && hasNumbers(root["aero"].toObject(),
+        {"maxLiftDrag", "zeroLiftDrag", "inducedDragFactor", "cleanClMax", "takeoffClMax", "landingClMax"});
+    valid = valid && hasNumbers(root["engine"].toObject(),
+        {"seaLevelStaticThrustN", "cruiseSfcPerHour", "loiterSfcPerHour", "thrustLapseCruise"});
+    for (const QJsonValue& value : root["mission"].toArray()) {
+        const auto object = value.toObject();
+        const double type = object["type"].toDouble(-1);
+        valid = valid && value.isObject() && object["name"].isString()
+            && hasNumbers(object, {"type", "distanceKm", "durationMin", "altitudeM", "mach", "payloadDropKg", "fixedFuelFraction"})
+            && type >= 0 && type <= 7 && std::floor(type) == type;
+    }
+    if (!valid) {
+        QMessageBox::warning(this, "加载失败", "项目缺少必要字段或字段类型不正确。当前输入未改变。");
+        return;
+    }
+    if (!confirmDiscard()) return;
+    QScopedValueRollback<bool> updating(m_updating, true);
     const QJsonObject r = root["requirements"].toObject();
     writeRequirements({r["cruiseMach"].toDouble(), r["cruiseAltitudeM"].toDouble(), r["combatRadiusKm"].toDouble(),
         r["payloadKg"].toDouble(), r["crewAndFixedKg"].toDouble(), r["takeoffDistanceM"].toDouble(),
@@ -513,4 +668,16 @@ void MainWindow::loadProject()
             object["payloadDropKg"].toDouble(), object["fixedFuelFraction"].toDouble()});
     }
     writeMission(mission);
+    m_projectPath = path;
+    setWindowTitle(QFileInfo(path).fileName() + "[*] - 无人作战飞机初步设计工具");
+    setWindowModified(false);
+    m_resultsCurrent = false;
+    m_iterationTable->setRowCount(0);
+    m_segmentResultTable->setRowCount(0);
+    m_summaryLabel->setText("尚未运行计算。");
+    m_marginLabel->clear();
+    m_plot->clearResult();
+    m_plot->setEnabled(false);
+    m_resultStatus->setText("项目已加载，尚未生成当前项目的结果。");
+    statusBar()->showMessage("项目已加载：" + path);
 }
