@@ -1,0 +1,25 @@
+# ninja log v6
+1071	1131	8022052784025843	CMakeFiles/core_tests.dir/core_tests_autogen/mocs_compilation.cpp.obj	efe4a1fd8015372e
+304	755	8022052776348740	CMakeFiles/ucav_core.dir/src/core/WeightAnalysis.cpp.obj	3593f6c6e5ec5cb3
+860	1071	8022052783472867	D:/work/feng/-plan/build_ascii/core_tests_autogen/mocs_compilation.cpp	36698a02b6810561
+860	1071	8022052783472867	D:/work/feng/-plan/build_ascii/core_tests_autogen/timestamp	36698a02b6810561
+856	1522	8022052787973395	D:/work/feng/-plan/build_ascii/UCAVDesigner_autogen/mocs_compilation.cpp	928f83125eb50e35
+860	1071	8022052783472867	core_tests_autogen/mocs_compilation.cpp	36698a02b6810561
+759	856	8022052780903397	libucav_core.a	dd69b22d6bf77a41
+856	1522	8022052787973395	UCAVDesigner_autogen/mocs_compilation.cpp	928f83125eb50e35
+1510	1693	8022052788405560	core_tests.exe	cc6e7b48c45fca66
+860	1071	8022052783472867	core_tests_autogen/timestamp	36698a02b6810561
+307	759	8022052776385474	CMakeFiles/ucav_core.dir/src/core/ConstraintAnalysis.cpp.obj	725696cef457fe91
+4060	4325	8022052813913215	UCAVDesigner.exe	835533155b591cd9
+1533	4059	8022052788645640	CMakeFiles/UCAVDesigner.dir/src/ui/MainWindow.cpp.obj	7a8c01fe6a8e4e7d
+12	296	8022052775698619	ucav_core_autogen/timestamp	50beb12710e5b6dd
+1529	3425	8022052788606698	CMakeFiles/UCAVDesigner.dir/src/main.cpp.obj	5357a0adea85ed7
+1539	3383	8022052788703063	CMakeFiles/UCAVDesigner.dir/src/ui/ConstraintPlotWidget.cpp.obj	65c7a766a4970770
+12	296	8022052775698619	D:/work/feng/-plan/build_ascii/ucav_core_autogen/mocs_compilation.cpp	50beb12710e5b6dd
+1075	1509	8022052784068606	CMakeFiles/core_tests.dir/tests/core_tests.cpp.obj	da0b571e86b3979f
+1525	3394	8022052788566413	CMakeFiles/UCAVDesigner.dir/UCAVDesigner_autogen/mocs_compilation.cpp.obj	87701006be13a050
+12	296	8022052775698619	D:/work/feng/-plan/build_ascii/ucav_core_autogen/timestamp	50beb12710e5b6dd
+12	296	8022052775698619	ucav_core_autogen/mocs_compilation.cpp	50beb12710e5b6dd
+856	1522	8022052787973395	UCAVDesigner_autogen/timestamp	928f83125eb50e35
+856	1522	8022052787973395	D:/work/feng/-plan/build_ascii/UCAVDesigner_autogen/timestamp	928f83125eb50e35
+299	367	8022052776306199	CMakeFiles/ucav_core.dir/ucav_core_autogen/mocs_compilation.cpp.obj	418a44fb0a39beb

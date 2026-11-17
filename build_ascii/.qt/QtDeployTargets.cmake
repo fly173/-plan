@@ -1,0 +1,8 @@
+set(__QT_DEPLOY_TARGET_ucav_core_FILE D:/work/feng/-plan/build_ascii/libucav_core.a)
+set(__QT_DEPLOY_TARGET_ucav_core_TYPE STATIC_LIBRARY)
+set(__QT_DEPLOY_TARGET_UCAVDesigner_FILE D:/work/feng/-plan/build_ascii/UCAVDesigner.exe)
+set(__QT_DEPLOY_TARGET_UCAVDesigner_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_UCAVDesigner_RUNTIME_DLLS D:/Qt/6.7.3/mingw_64/bin/Qt6Widgets.dll;D:/Qt/6.7.3/mingw_64/bin/Qt6Gui.dll;D:/Qt/6.7.3/mingw_64/bin/Qt6Core.dll)
+set(__QT_DEPLOY_TARGET_core_tests_FILE D:/work/feng/-plan/build_ascii/core_tests.exe)
+set(__QT_DEPLOY_TARGET_core_tests_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_core_tests_RUNTIME_DLLS )

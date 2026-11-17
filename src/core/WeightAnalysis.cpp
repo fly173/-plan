@@ -13,17 +13,17 @@ double clamp(double value, double low, double high)
 {
     return std::max(low, std::min(value, high));
 }
-}
+} // namespace
 
 std::vector<MissionSegment> defaultMission(const DesignRequirements& req)
 {
     return {
-        {MissionSegmentType::WarmupTakeoff, "暖机/起飞", 0.0, 0.0, 0.0, 0.0, 0.0, 0.970},
+        {MissionSegmentType::WarmupTakeoff, "暖机 / 起飞", 0.0, 0.0, 0.0, 0.0, 0.0, 0.970},
         {MissionSegmentType::Climb, "爬升", 0.0, 0.0, req.cruiseAltitudeM, 0.55, 0.0, 0.985},
-        {MissionSegmentType::Cruise, "出航巡航", req.combatRadiusKm, 0.0, req.cruiseAltitudeM, req.cruiseMach, 0.0, 0.0},
-        {MissionSegmentType::Loiter, "盘旋侦察", 0.0, 30.0, req.cruiseAltitudeM, 0.45, 0.0, 0.0},
-        {MissionSegmentType::Approach, "低空进近", 120.0, 0.0, 1000.0, 0.35, 0.0, 0.990},
-        {MissionSegmentType::PayloadDrop, "投弹", 0.0, 0.0, 0.0, 0.0, req.payloadKg, 1.000},
+        {MissionSegmentType::Cruise, "去程巡航", req.combatRadiusKm, 0.0, req.cruiseAltitudeM, req.cruiseMach, 0.0, 0.0},
+        {MissionSegmentType::Loiter, "留空 / 侦察", 0.0, 30.0, req.cruiseAltitudeM, 0.45, 0.0, 0.0},
+        {MissionSegmentType::Approach, "低空接近", 120.0, 0.0, 1000.0, 0.35, 0.0, 0.990},
+        {MissionSegmentType::PayloadDrop, "载荷投放", 0.0, 0.0, 0.0, 0.0, req.payloadKg, 1.000},
         {MissionSegmentType::ReturnCruise, "返航巡航", req.combatRadiusKm, 0.0, req.cruiseAltitudeM, req.cruiseMach, 0.0, 0.0},
         {MissionSegmentType::Landing, "着陆", 0.0, 0.0, 0.0, 0.0, 0.0, 0.995}
     };
@@ -32,12 +32,12 @@ std::vector<MissionSegment> defaultMission(const DesignRequirements& req)
 std::string missionSegmentTypeName(MissionSegmentType type)
 {
     switch (type) {
-    case MissionSegmentType::WarmupTakeoff: return "暖机/起飞";
+    case MissionSegmentType::WarmupTakeoff: return "暖机 / 起飞";
     case MissionSegmentType::Climb: return "爬升";
-    case MissionSegmentType::Cruise: return "出航巡航";
-    case MissionSegmentType::Loiter: return "盘旋侦察";
-    case MissionSegmentType::Approach: return "低空进近";
-    case MissionSegmentType::PayloadDrop: return "投弹";
+    case MissionSegmentType::Cruise: return "巡航";
+    case MissionSegmentType::Loiter: return "留空";
+    case MissionSegmentType::Approach: return "接近";
+    case MissionSegmentType::PayloadDrop: return "载荷投放";
     case MissionSegmentType::ReturnCruise: return "返航巡航";
     case MissionSegmentType::Landing: return "着陆";
     }

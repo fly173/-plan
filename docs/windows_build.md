@@ -1,26 +1,40 @@
-# Windows 构建与打包说明
+# Windows Build And Packaging
 
-## 开发环境
+## Development Environment
 
-1. 安装 Qt 5.15.x 或 Qt 6.x，选择 MinGW 或 MSVC 套件。
-2. 用 Qt Creator 打开 `UCAVDesigner.pro`。
-3. 选择 Release 构建配置并编译运行。
+1. Install Qt 5.15.x or Qt 6.x with either a MinGW or MSVC kit.
+2. Open `UCAVDesigner.pro` in Qt Creator, or configure the project with CMake.
+3. Select a Release build configuration and run the application.
 
-## 命令行构建
+## CMake Build
+
+```bat
+cmake -S . -B build
+cmake --build build --config Release
+ctest --test-dir build -C Release
+```
+
+If CMake cannot find Qt, provide the Qt kit path:
+
+```bat
+cmake -S . -B build -DCMAKE_PREFIX_PATH=C:\Qt\6.7.0\mingw_64
+```
+
+## qmake Build
 
 ```bat
 qmake UCAVDesigner.pro
 mingw32-make release
 ```
 
-如果使用 MSVC，把 `mingw32-make` 替换为 Qt Kit 对应的 `nmake` 或在 Qt Creator 中构建。
+For MSVC kits, replace `mingw32-make` with the matching Qt kit build tool, such as `nmake`, or build directly in Qt Creator.
 
-## 打包 `.exe`
+## Package The Executable
 
-进入 Release 输出目录，执行：
+Enter the Release output directory and run:
 
 ```bat
 windeployqt UCAVDesigner.exe
 ```
 
-完成后将输出目录整体复制到无 Qt 环境的 Windows 机器上测试。若后续接入 QCustomPlot，只需把 `qcustomplot.h/.cpp` 加入工程，并用 QCustomPlot 替换当前的 `ConstraintPlotWidget` 绘图实现。
+Copy the deployed output directory to a Windows machine without Qt installed to verify the packaged application.

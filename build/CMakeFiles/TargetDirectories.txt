@@ -1,0 +1,12 @@
+D:/冯/-plan/build/CMakeFiles/ucav_core.dir
+D:/冯/-plan/build/CMakeFiles/UCAVDesigner.dir
+D:/冯/-plan/build/CMakeFiles/core_tests.dir
+D:/冯/-plan/build/CMakeFiles/test.dir
+D:/冯/-plan/build/CMakeFiles/edit_cache.dir
+D:/冯/-plan/build/CMakeFiles/rebuild_cache.dir
+D:/冯/-plan/build/CMakeFiles/ucav_core_autogen_timestamp_deps.dir
+D:/冯/-plan/build/CMakeFiles/ucav_core_autogen.dir
+D:/冯/-plan/build/CMakeFiles/UCAVDesigner_autogen_timestamp_deps.dir
+D:/冯/-plan/build/CMakeFiles/UCAVDesigner_autogen.dir
+D:/冯/-plan/build/CMakeFiles/core_tests_autogen_timestamp_deps.dir
+D:/冯/-plan/build/CMakeFiles/core_tests_autogen.dir

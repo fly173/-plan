@@ -23,7 +23,7 @@ double marginPercent(double selected, double required)
     }
     return (selected / required - 1.0) * 100.0;
 }
-}
+} // namespace
 
 double ConstraintAnalysis::cruiseTW(double wingLoading, const DesignRequirements& requirements,
                                     const AeroParameters& aero, const EngineParameters& engine) const
@@ -73,11 +73,11 @@ ConstraintResult ConstraintAnalysis::solve(const DesignRequirements& requirement
                                            const EngineParameters& engine) const
 {
     ConstraintResult result;
-    ConstraintCurve cruise{"等高等速巡航", {}};
-    ConstraintCurve turn{"等高等速转弯", {}};
-    ConstraintCurve climb{"等速爬升", {}};
+    ConstraintCurve cruise{"巡航", {}};
+    ConstraintCurve turn{"持续盘旋", {}};
+    ConstraintCurve climb{"爬升", {}};
     ConstraintCurve takeoff{"起飞距离", {}};
-    ConstraintCurve landing{"着陆距离限制", {}};
+    ConstraintCurve landing{"着陆限制", {}};
 
     result.landingWingLoadingLimit = landingWingLoadingLimit(requirements, aero);
 

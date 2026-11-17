@@ -81,7 +81,7 @@ void ConstraintPlotWidget::paintEvent(QPaintEvent*)
 
     if (!m_hasResult) {
         painter.setPen(QColor(100, 116, 139));
-        painter.drawText(area, Qt::AlignCenter, "点击“计算总体参数”生成界限线图");
+        painter.drawText(area, Qt::AlignCenter, "运行计算后生成约束图。");
         return;
     }
 

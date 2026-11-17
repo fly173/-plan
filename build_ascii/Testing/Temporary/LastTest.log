@@ -1,0 +1,19 @@
+Start testing: Jun 15 23:04 中国标准时间
+----------------------------------------------------------
+Unable to find executable: D:/work/feng/-plan/build_ascii/core_tests.exe
+1/1 Testing: core_tests
+1/1 Test: core_tests
+Command: ""
+Directory: D:/fengboshi/-plan/build_ascii
+"core_tests" start time: 
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"core_tests" end time: Jun 15 23:04 中国标准时间
+"core_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jun 15 23:04 中国标准时间

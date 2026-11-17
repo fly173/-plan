@@ -1,0 +1,132 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "UCAVDesigner",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "UCAVDesigner::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-UCAVDesigner-069b44d402b525b8b027.json",
+					"name" : "UCAVDesigner",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "UCAVDesigner_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-UCAVDesigner_autogen-ebe6cb13d6ed1667b980.json",
+					"name" : "UCAVDesigner_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "UCAVDesigner_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-UCAVDesigner_autogen_timestamp_deps-af813c2fad868c2d1736.json",
+					"name" : "UCAVDesigner_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "core_tests::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-core_tests-6845180e6edd2d99f6e2.json",
+					"name" : "core_tests",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "core_tests_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-core_tests_autogen-9ad2cb024a8d317e6354.json",
+					"name" : "core_tests_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "core_tests_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-core_tests_autogen_timestamp_deps-07ec419e6eaf24519a2f.json",
+					"name" : "core_tests_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ucav_core::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ucav_core-d1e2bc5a3adb129dc17c.json",
+					"name" : "ucav_core",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ucav_core_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ucav_core_autogen-13288c2bd70ff1771c92.json",
+					"name" : "ucav_core_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ucav_core_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ucav_core_autogen_timestamp_deps-ad0896b0229019575c14.json",
+					"name" : "ucav_core_autogen_timestamp_deps",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/work/feng/-plan/build_ascii",
+		"source" : "D:/\u51af/-plan"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

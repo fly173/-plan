@@ -14,13 +14,18 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTabWidget>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
 
 namespace {
 
+constexpr double kMetersPerKilometer = 1000.0;
+constexpr double kSecondsPerMinute = 60.0;
+constexpr double kSecondsPerHour = 3600.0;
+
 QLineEdit* numericEdit(double value)
 {
-    auto* edit = new QLineEdit(QString::number(value, 'f', 3));
+    auto* edit = new QLineEdit(QString::number(value, 'g', 10));
     auto* validator = new QDoubleValidator(edit);
     validator->setNotation(QDoubleValidator::StandardNotation);
     edit->setValidator(validator);
@@ -32,9 +37,21 @@ double valueOf(const QLineEdit* edit)
     return edit->text().toDouble();
 }
 
+double tableNumber(const QTableWidget* table, int row, int column)
+{
+    const QTableWidgetItem* cell = table->item(row, column);
+    return cell ? cell->text().toDouble() : 0.0;
+}
+
+std::string tableText(const QTableWidget* table, int row, int column)
+{
+    const QTableWidgetItem* cell = table->item(row, column);
+    return cell ? cell->text().toStdString() : std::string();
+}
+
 void setCell(QTableWidget* table, int row, int column, double value)
 {
-    table->setItem(row, column, new QTableWidgetItem(QString::number(value, 'f', 4)));
+    table->setItem(row, column, new QTableWidgetItem(QString::number(value, 'g', 10)));
 }
 
 void setCell(QTableWidget* table, int row, int column, const QString& value)
@@ -42,18 +59,18 @@ void setCell(QTableWidget* table, int row, int column, const QString& value)
     table->setItem(row, column, new QTableWidgetItem(value));
 }
 
-}
+} // namespace
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
-    setWindowTitle("UCAV 总体参数初步设计工具");
+    setWindowTitle("无人作战飞机初步设计工具");
     resize(1180, 760);
 
     auto* tabs = new QTabWidget(this);
     tabs->addTab(buildDesignTab(), "设计要求");
     tabs->addTab(buildMissionTab(), "任务剖面");
-    tabs->addTab(buildParameterTab(), "气动/发动机");
+    tabs->addTab(buildParameterTab(), "气动 / 发动机");
     tabs->addTab(buildResultTab(), "计算结果");
     setCentralWidget(tabs);
 
@@ -77,22 +94,22 @@ QWidget* MainWindow::buildDesignTab()
     m_climbRate = numericEdit(25.0);
 
     form->addRow("巡航马赫数", m_cruiseMach);
-    form->addRow("巡航高度 m", m_cruiseAltitude);
-    form->addRow("作战半径 km", m_combatRadius);
-    form->addRow("武器载荷 kg", m_payload);
-    form->addRow("固定设备/余量 kg", m_fixedWeight);
-    form->addRow("起飞距离 m", m_takeoffDistance);
-    form->addRow("着陆距离 m", m_landingDistance);
-    form->addRow("转弯过载 n", m_turnLoadFactor);
-    form->addRow("爬升率 m/s", m_climbRate);
+    form->addRow("巡航高度 (m)", m_cruiseAltitude);
+    form->addRow("作战半径 (m)", m_combatRadius);
+    form->addRow("任务载荷 (kg)", m_payload);
+    form->addRow("固定设备 / 裕度 (kg)", m_fixedWeight);
+    form->addRow("起飞距离 (m)", m_takeoffDistance);
+    form->addRow("着陆距离 (m)", m_landingDistance);
+    form->addRow("盘旋过载系数", m_turnLoadFactor);
+    form->addRow("爬升率 (m/s)", m_climbRate);
 
-    auto* group = new QGroupBox("基础设计指标", page);
+    auto* group = new QGroupBox("设计要求", page);
     group->setLayout(form);
 
     auto* buttons = new QHBoxLayout();
-    auto* calculate = new QPushButton("计算总体参数", page);
+    auto* calculate = new QPushButton("开始计算", page);
     auto* save = new QPushButton("保存项目", page);
-    auto* load = new QPushButton("导入项目", page);
+    auto* load = new QPushButton("加载项目", page);
     buttons->addWidget(calculate);
     buttons->addWidget(save);
     buttons->addWidget(load);
@@ -113,7 +130,9 @@ QWidget* MainWindow::buildMissionTab()
     auto* page = new QWidget(this);
     auto* layout = new QVBoxLayout(page);
     m_missionTable = new QTableWidget(0, 8, page);
-    m_missionTable->setHorizontalHeaderLabels({"类型", "名称", "距离 km", "时间 min", "高度 m", "马赫数", "抛载 kg", "固定燃油系数"});
+    m_missionTable->setHorizontalHeaderLabels({
+        "类型", "名称", "距离 (m)", "持续时间 (s)", "高度 (m)",
+        "马赫数", "投放载荷 (kg)", "固定燃油系数"});
     m_missionTable->horizontalHeader()->setStretchLastSection(true);
     m_missionTable->verticalHeader()->setVisible(false);
 
@@ -145,19 +164,19 @@ QWidget* MainWindow::buildParameterTab()
     m_landingClMax = numericEdit(2.0);
     aeroForm->addRow("最大升阻比", m_maxLiftDrag);
     aeroForm->addRow("零升阻力系数 CD0", m_zeroLiftDrag);
-    aeroForm->addRow("升致阻力因子 K", m_inducedDrag);
-    aeroForm->addRow("干净构型 CLmax", m_cleanClMax);
-    aeroForm->addRow("起飞 CLmax", m_takeoffClMax);
-    aeroForm->addRow("着陆 CLmax", m_landingClMax);
+    aeroForm->addRow("诱导阻力因子 K", m_inducedDrag);
+    aeroForm->addRow("洁净构型 CLmax", m_cleanClMax);
+    aeroForm->addRow("起飞构型 CLmax", m_takeoffClMax);
+    aeroForm->addRow("着陆构型 CLmax", m_landingClMax);
 
     auto* engineForm = new QFormLayout();
     m_engineThrust = numericEdit(65000.0);
     m_cruiseSfc = numericEdit(0.78);
     m_loiterSfc = numericEdit(0.66);
     m_thrustLapse = numericEdit(0.42);
-    engineForm->addRow("单台/等效静推力 N", m_engineThrust);
-    engineForm->addRow("巡航 SFC 1/h", m_cruiseSfc);
-    engineForm->addRow("盘旋 SFC 1/h", m_loiterSfc);
+    engineForm->addRow("海平面静推力 (N)", m_engineThrust);
+    engineForm->addRow("巡航耗油率 (1/s)", m_cruiseSfc);
+    engineForm->addRow("留空耗油率 (1/s)", m_loiterSfc);
     engineForm->addRow("巡航推力衰减系数", m_thrustLapse);
 
     auto* aeroGroup = new QGroupBox("气动参数", page);
@@ -175,17 +194,20 @@ QWidget* MainWindow::buildResultTab()
     auto* root = new QHBoxLayout(page);
 
     auto* left = new QVBoxLayout();
-    m_summaryLabel = new QLabel("尚未计算", page);
+    m_summaryLabel = new QLabel("尚未运行计算。", page);
     m_summaryLabel->setWordWrap(true);
-    m_marginLabel = new QLabel("点击界限线图选择设计点", page);
+    m_marginLabel = new QLabel("点击约束图可选择设计点。", page);
     m_marginLabel->setWordWrap(true);
 
     m_iterationTable = new QTableWidget(0, 5, page);
-    m_iterationTable->setHorizontalHeaderLabels({"迭代", "起飞重量 kg", "空重系数", "燃油系数", "残差 kg"});
+    m_iterationTable->setHorizontalHeaderLabels({
+        "迭代次数", "起飞重量 (kg)", "空重系数",
+        "燃油系数", "残差 (kg)"});
     m_iterationTable->horizontalHeader()->setStretchLastSection(true);
 
     m_segmentResultTable = new QTableWidget(0, 4, page);
-    m_segmentResultTable->setHorizontalHeaderLabels({"任务段", "燃油系数", "段前重量 kg", "段后重量 kg"});
+    m_segmentResultTable->setHorizontalHeaderLabels({
+        "任务段", "燃油系数", "段前重量 (kg)", "段后重量 (kg)"});
     m_segmentResultTable->horizontalHeader()->setStretchLastSection(true);
 
     left->addWidget(m_summaryLabel);
@@ -241,8 +263,8 @@ void MainWindow::addMissionRow(const ucav::MissionSegment& segment)
     combo->setCurrentIndex(ucav::missionSegmentTypeIndex(segment.type));
     m_missionTable->setCellWidget(row, 0, combo);
     setCell(m_missionTable, row, 1, QString::fromStdString(segment.name));
-    setCell(m_missionTable, row, 2, segment.distanceKm);
-    setCell(m_missionTable, row, 3, segment.durationMin);
+    setCell(m_missionTable, row, 2, segment.distanceKm * kMetersPerKilometer);
+    setCell(m_missionTable, row, 3, segment.durationMin * kSecondsPerMinute);
     setCell(m_missionTable, row, 4, segment.altitudeM);
     setCell(m_missionTable, row, 5, segment.mach);
     setCell(m_missionTable, row, 6, segment.payloadDropKg);
@@ -267,7 +289,7 @@ ucav::DesignRequirements MainWindow::readRequirements() const
     ucav::DesignRequirements req;
     req.cruiseMach = valueOf(m_cruiseMach);
     req.cruiseAltitudeM = valueOf(m_cruiseAltitude);
-    req.combatRadiusKm = valueOf(m_combatRadius);
+    req.combatRadiusKm = valueOf(m_combatRadius) / kMetersPerKilometer;
     req.payloadKg = valueOf(m_payload);
     req.crewAndFixedKg = valueOf(m_fixedWeight);
     req.takeoffDistanceM = valueOf(m_takeoffDistance);
@@ -285,7 +307,8 @@ ucav::AeroParameters MainWindow::readAero() const
 
 ucav::EngineParameters MainWindow::readEngine() const
 {
-    return {valueOf(m_engineThrust), valueOf(m_cruiseSfc), valueOf(m_loiterSfc), valueOf(m_thrustLapse)};
+    return {valueOf(m_engineThrust), valueOf(m_cruiseSfc) * kSecondsPerHour,
+            valueOf(m_loiterSfc) * kSecondsPerHour, valueOf(m_thrustLapse)};
 }
 
 std::vector<ucav::MissionSegment> MainWindow::readMission() const
@@ -295,13 +318,13 @@ std::vector<ucav::MissionSegment> MainWindow::readMission() const
         auto* combo = qobject_cast<QComboBox*>(m_missionTable->cellWidget(row, 0));
         ucav::MissionSegment segment;
         segment.type = ucav::missionSegmentTypeFromIndex(combo ? combo->currentIndex() : 0);
-        segment.name = m_missionTable->item(row, 1)->text().toStdString();
-        segment.distanceKm = m_missionTable->item(row, 2)->text().toDouble();
-        segment.durationMin = m_missionTable->item(row, 3)->text().toDouble();
-        segment.altitudeM = m_missionTable->item(row, 4)->text().toDouble();
-        segment.mach = m_missionTable->item(row, 5)->text().toDouble();
-        segment.payloadDropKg = m_missionTable->item(row, 6)->text().toDouble();
-        segment.fixedFuelFraction = m_missionTable->item(row, 7)->text().toDouble();
+        segment.name = tableText(m_missionTable, row, 1);
+        segment.distanceKm = tableNumber(m_missionTable, row, 2) / kMetersPerKilometer;
+        segment.durationMin = tableNumber(m_missionTable, row, 3) / kSecondsPerMinute;
+        segment.altitudeM = tableNumber(m_missionTable, row, 4);
+        segment.mach = tableNumber(m_missionTable, row, 5);
+        segment.payloadDropKg = tableNumber(m_missionTable, row, 6);
+        segment.fixedFuelFraction = tableNumber(m_missionTable, row, 7);
         mission.push_back(segment);
     }
     return mission;
@@ -311,7 +334,7 @@ void MainWindow::writeRequirements(const ucav::DesignRequirements& req)
 {
     m_cruiseMach->setText(QString::number(req.cruiseMach));
     m_cruiseAltitude->setText(QString::number(req.cruiseAltitudeM));
-    m_combatRadius->setText(QString::number(req.combatRadiusKm));
+    m_combatRadius->setText(QString::number(req.combatRadiusKm * kMetersPerKilometer));
     m_payload->setText(QString::number(req.payloadKg));
     m_fixedWeight->setText(QString::number(req.crewAndFixedKg));
     m_takeoffDistance->setText(QString::number(req.takeoffDistanceM));
@@ -333,8 +356,8 @@ void MainWindow::writeAero(const ucav::AeroParameters& aero)
 void MainWindow::writeEngine(const ucav::EngineParameters& engine)
 {
     m_engineThrust->setText(QString::number(engine.seaLevelStaticThrustN));
-    m_cruiseSfc->setText(QString::number(engine.cruiseSfcPerHour));
-    m_loiterSfc->setText(QString::number(engine.loiterSfcPerHour));
+    m_cruiseSfc->setText(QString::number(engine.cruiseSfcPerHour / kSecondsPerHour, 'g', 10));
+    m_loiterSfc->setText(QString::number(engine.loiterSfcPerHour / kSecondsPerHour, 'g', 10));
     m_thrustLapse->setText(QString::number(engine.thrustLapseCruise));
 }
 
@@ -348,7 +371,12 @@ void MainWindow::writeMission(const std::vector<ucav::MissionSegment>& mission)
 
 void MainWindow::showWeightResult(const ucav::WeightResult& result)
 {
-    m_summaryLabel->setText(QString("收敛: %1\n最大起飞重量: %2 kg\n空重: %3 kg\n燃油: %4 kg\n空重系数: %5  燃油系数: %6")
+    m_summaryLabel->setText(QString(
+        "是否收敛: %1\n"
+        "最大起飞重量: %2 kg\n"
+        "空机重量: %3 kg\n"
+        "燃油重量: %4 kg\n"
+        "空重系数: %5  燃油系数: %6")
         .arg(result.converged ? "是" : "否")
         .arg(result.takeoffWeightKg, 0, 'f', 1)
         .arg(result.emptyWeightKg, 0, 'f', 1)
@@ -380,7 +408,10 @@ void MainWindow::showWeightResult(const ucav::WeightResult& result)
 
 void MainWindow::showMargins(const ucav::MarginResult& margins)
 {
-    m_marginLabel->setText(QString("设计点: W/S=%1 N/m^2, T/W=%2\n巡航裕度 %3%  转弯裕度 %4%  爬升裕度 %5%  起飞裕度 %6%  着陆裕度 %7%")
+    m_marginLabel->setText(QString(
+        "设计点: W/S=%1 N/m^2, T/W=%2\n"
+        "巡航裕度 %3%  盘旋裕度 %4%  爬升裕度 %5%  "
+        "起飞裕度 %6%  着陆裕度 %7%")
         .arg(margins.selectedWingLoading, 0, 'f', 1)
         .arg(margins.selectedThrustToWeight, 0, 'f', 3)
         .arg(margins.cruiseMarginPercent, 0, 'f', 1)
@@ -398,7 +429,7 @@ void MainWindow::handleDesignPoint(double wingLoading, double thrustToWeight)
 
 void MainWindow::saveProject()
 {
-    const QString path = QFileDialog::getSaveFileName(this, "保存项目", QString(), "UCAV Project (*.json)");
+    const QString path = QFileDialog::getSaveFileName(this, "保存项目", QString(), "无人机项目 (*.json)");
     if (path.isEmpty()) {
         return;
     }
@@ -437,14 +468,14 @@ void MainWindow::saveProject()
 
 void MainWindow::loadProject()
 {
-    const QString path = QFileDialog::getOpenFileName(this, "导入项目", QString(), "UCAV Project (*.json)");
+    const QString path = QFileDialog::getOpenFileName(this, "加载项目", QString(), "无人机项目 (*.json)");
     if (path.isEmpty()) {
         return;
     }
 
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::warning(this, "导入失败", file.errorString());
+        QMessageBox::warning(this, "加载失败", file.errorString());
         return;
     }
     const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();

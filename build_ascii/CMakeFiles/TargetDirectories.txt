@@ -1,0 +1,12 @@
+D:/work/feng/-plan/build_ascii/CMakeFiles/ucav_core.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/UCAVDesigner.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/core_tests.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/test.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/edit_cache.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/rebuild_cache.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/ucav_core_autogen_timestamp_deps.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/ucav_core_autogen.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/UCAVDesigner_autogen_timestamp_deps.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/UCAVDesigner_autogen.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/core_tests_autogen_timestamp_deps.dir
+D:/work/feng/-plan/build_ascii/CMakeFiles/core_tests_autogen.dir
