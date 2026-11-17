@@ -72,11 +72,11 @@ void ConstraintPlotWidget::paintEvent(QPaintEvent*)
 
     painter.setPen(QPen(QColor(35, 45, 60), 1));
     painter.drawText(QRectF(area.left(), area.bottom() + 28, area.width(), 24),
-                     Qt::AlignCenter, "翼载荷 W/S (N/m^2)");
+                     Qt::AlignCenter, "翼载荷 W/S (N/m²)");
     painter.save();
     painter.translate(18, area.center().y());
     painter.rotate(-90);
-    painter.drawText(QRectF(-120, -10, 240, 20), Qt::AlignCenter, "推重比 T/W");
+    painter.drawText(QRectF(-120, -10, 240, 20), Qt::AlignCenter, "推重比 T/W（无量纲）");
     painter.restore();
 
     if (!m_hasResult) {

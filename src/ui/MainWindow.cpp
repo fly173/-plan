@@ -93,14 +93,14 @@ QWidget* MainWindow::buildDesignTab()
     m_turnLoadFactor = numericEdit(2.5);
     m_climbRate = numericEdit(25.0);
 
-    form->addRow("巡航马赫数", m_cruiseMach);
+    form->addRow("巡航马赫数（无量纲）", m_cruiseMach);
     form->addRow("巡航高度 (m)", m_cruiseAltitude);
     form->addRow("作战半径 (m)", m_combatRadius);
     form->addRow("任务载荷 (kg)", m_payload);
     form->addRow("固定设备 / 裕度 (kg)", m_fixedWeight);
     form->addRow("起飞距离 (m)", m_takeoffDistance);
     form->addRow("着陆距离 (m)", m_landingDistance);
-    form->addRow("盘旋过载系数", m_turnLoadFactor);
+    form->addRow("盘旋过载系数（无量纲）", m_turnLoadFactor);
     form->addRow("爬升率 (m/s)", m_climbRate);
 
     auto* group = new QGroupBox("设计要求", page);
@@ -120,6 +120,9 @@ QWidget* MainWindow::buildDesignTab()
     connect(load, &QPushButton::clicked, this, &MainWindow::loadProject);
 
     layout->addWidget(group);
+    auto* unitHint = new QLabel("单位说明：长度用米（m），质量用千克（kg），时间用秒（s），力用牛顿（N）。马赫数和各类比值、系数为无量纲量。", page);
+    unitHint->setWordWrap(true);
+    layout->addWidget(unitHint);
     layout->addLayout(buttons);
     layout->addStretch();
     return page;
@@ -132,7 +135,8 @@ QWidget* MainWindow::buildMissionTab()
     m_missionTable = new QTableWidget(0, 8, page);
     m_missionTable->setHorizontalHeaderLabels({
         "类型", "名称", "距离 (m)", "持续时间 (s)", "高度 (m)",
-        "马赫数", "投放载荷 (kg)", "固定燃油系数"});
+        "马赫数（无量纲）", "投放载荷 (kg)", "固定燃油系数（无量纲）"});
+    m_missionTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     m_missionTable->horizontalHeader()->setStretchLastSection(true);
     m_missionTable->verticalHeader()->setVisible(false);
 
@@ -162,12 +166,12 @@ QWidget* MainWindow::buildParameterTab()
     m_cleanClMax = numericEdit(1.45);
     m_takeoffClMax = numericEdit(1.8);
     m_landingClMax = numericEdit(2.0);
-    aeroForm->addRow("最大升阻比", m_maxLiftDrag);
-    aeroForm->addRow("零升阻力系数 CD0", m_zeroLiftDrag);
-    aeroForm->addRow("诱导阻力因子 K", m_inducedDrag);
-    aeroForm->addRow("洁净构型 CLmax", m_cleanClMax);
-    aeroForm->addRow("起飞构型 CLmax", m_takeoffClMax);
-    aeroForm->addRow("着陆构型 CLmax", m_landingClMax);
+    aeroForm->addRow("最大升阻比（无量纲）", m_maxLiftDrag);
+    aeroForm->addRow("零升阻力系数 CD0（无量纲）", m_zeroLiftDrag);
+    aeroForm->addRow("诱导阻力因子 K（无量纲）", m_inducedDrag);
+    aeroForm->addRow("洁净构型最大升力系数（无量纲）", m_cleanClMax);
+    aeroForm->addRow("起飞构型最大升力系数（无量纲）", m_takeoffClMax);
+    aeroForm->addRow("着陆构型最大升力系数（无量纲）", m_landingClMax);
 
     auto* engineForm = new QFormLayout();
     m_engineThrust = numericEdit(65000.0);
@@ -175,9 +179,11 @@ QWidget* MainWindow::buildParameterTab()
     m_loiterSfc = numericEdit(0.66);
     m_thrustLapse = numericEdit(0.42);
     engineForm->addRow("海平面静推力 (N)", m_engineThrust);
-    engineForm->addRow("巡航耗油率 (1/s)", m_cruiseSfc);
-    engineForm->addRow("留空耗油率 (1/s)", m_loiterSfc);
-    engineForm->addRow("巡航推力衰减系数", m_thrustLapse);
+    engineForm->addRow("巡航耗油率 (s⁻¹)", m_cruiseSfc);
+    engineForm->addRow("留空耗油率 (s⁻¹)", m_loiterSfc);
+    engineForm->addRow("巡航推力衰减系数（无量纲）", m_thrustLapse);
+    m_cruiseSfc->setToolTip("按每秒显示，s⁻¹ 与 1/s 含义相同。每小时的数值除以 3600 后得到每秒的数值。");
+    m_loiterSfc->setToolTip(m_cruiseSfc->toolTip());
 
     auto* aeroGroup = new QGroupBox("气动参数", page);
     aeroGroup->setLayout(aeroForm);
@@ -201,14 +207,20 @@ QWidget* MainWindow::buildResultTab()
 
     m_iterationTable = new QTableWidget(0, 5, page);
     m_iterationTable->setHorizontalHeaderLabels({
-        "迭代次数", "起飞重量 (kg)", "空重系数",
+        "迭代次数", "起飞质量 (kg)", "空重系数",
         "燃油系数", "残差 (kg)"});
     m_iterationTable->horizontalHeader()->setStretchLastSection(true);
+    m_iterationTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_iterationTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     m_segmentResultTable = new QTableWidget(0, 4, page);
     m_segmentResultTable->setHorizontalHeaderLabels({
-        "任务段", "燃油系数", "段前重量 (kg)", "段后重量 (kg)"});
+        "任务段", "燃油系数", "段前质量 (kg)", "段后质量 (kg)"});
     m_segmentResultTable->horizontalHeader()->setStretchLastSection(true);
+    m_segmentResultTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    m_segmentResultTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_summaryLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_marginLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
     left->addWidget(m_summaryLabel);
     left->addWidget(m_marginLabel);
@@ -373,9 +385,9 @@ void MainWindow::showWeightResult(const ucav::WeightResult& result)
 {
     m_summaryLabel->setText(QString(
         "是否收敛: %1\n"
-        "最大起飞重量: %2 kg\n"
-        "空机重量: %3 kg\n"
-        "燃油重量: %4 kg\n"
+        "最大起飞质量: %2 kg\n"
+        "空机质量: %3 kg\n"
+        "燃油质量: %4 kg\n"
         "空重系数: %5  燃油系数: %6")
         .arg(result.converged ? "是" : "否")
         .arg(result.takeoffWeightKg, 0, 'f', 1)
@@ -409,7 +421,7 @@ void MainWindow::showWeightResult(const ucav::WeightResult& result)
 void MainWindow::showMargins(const ucav::MarginResult& margins)
 {
     m_marginLabel->setText(QString(
-        "设计点: W/S=%1 N/m^2, T/W=%2\n"
+        "设计点：翼载荷 W/S=%1 N/m²，推重比 T/W=%2（无量纲）\n"
         "巡航裕度 %3%  盘旋裕度 %4%  爬升裕度 %5%  "
         "起飞裕度 %6%  着陆裕度 %7%")
         .arg(margins.selectedWingLoading, 0, 'f', 1)
